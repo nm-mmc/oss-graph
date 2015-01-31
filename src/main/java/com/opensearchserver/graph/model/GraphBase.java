@@ -15,22 +15,16 @@
  */
 package com.opensearchserver.graph.model;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.opensearchserver.utils.json.ServerResource;
 
-public class Base {
+@JsonInclude(Include.NON_EMPTY)
+public class GraphBase {
 
-	public Node createNode(Map<String, Object> properties) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+	public ServerResource data;
 
-	public Node updateNode(Long node_id, Map<String, Object> properties) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	public Node deleteNode(Long node_id) {
-		// TODO Auto-generated method stub
-		return null;
+	public GraphBase() {
+		data = null;
 	}
 }
