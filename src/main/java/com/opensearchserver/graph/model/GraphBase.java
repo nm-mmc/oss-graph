@@ -13,34 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.opensearchserver.graph;
+package com.opensearchserver.graph.model;
 
+import java.util.Map;
 import java.util.Set;
 
-import com.opensearchserver.graph.model.Base;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.opensearchserver.utils.json.ServerResource;
 
-public class GraphBaseManager {
+@JsonInclude(Include.NON_EMPTY)
+public class GraphBase {
 
-	public static final GraphBaseManager INSTANCE = null;
+	public ServerResource data;
 
-	public Set<String> getNameSet() {
-		// TODO Auto-generated method stub
-		return null;
+	public Map<String, PropertyTypeEnum> node_properties;
+
+	public Set<String> edge_types;
+
+	public GraphBase() {
+		data = null;
+		node_properties = null;
+		edge_types = null;
 	}
 
-	public void createBase(String db_name) {
-		// TODO Auto-generated method stub
-
-	}
-
-	public boolean baseExists(String db_name) {
-		// TODO Auto-generated method stub
-		return false;
-	}
-
-	public Base getBase(String db_name) {
-		// TODO Auto-generated method stub
-		return null;
+	public static enum PropertyTypeEnum {
+		indexed, stored;
 	}
 
 }
