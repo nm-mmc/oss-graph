@@ -16,6 +16,8 @@
 package com.opensearchserver.graph;
 
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import javax.ws.rs.Path;
@@ -67,7 +69,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 					"Graph base not found: " + db_name);
 		try {
 			GraphProcess.deleteDataIndex(base);
-		} catch (IOException e) {
+		} catch (IOException | URISyntaxException e) {
 			throw new JsonApplicationException(e);
 		}
 		return base;
@@ -80,7 +82,18 @@ public class GraphServiceImpl implements GraphServiceInterface {
 			GraphProcess.createUpdateNode(getBase(uriInfo, db_name), node_id,
 					node);
 			return node;
-		} catch (IOException e) {
+		} catch (IOException | URISyntaxException e) {
+			throw new JsonApplicationException(e);
+		}
+	}
+
+	@Override
+	public Set<String> createUpdateNodes(UriInfo uriInfo, String db_name,
+			LinkedHashMap<String, GraphNode> nodes) {
+		try {
+			GraphProcess.createUpdateNodes(getBase(uriInfo, db_name), nodes);
+			return nodes.keySet();
+		} catch (IOException | URISyntaxException e) {
 			throw new JsonApplicationException(e);
 		}
 	}
@@ -94,7 +107,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 				throw new JsonApplicationException(Status.NOT_FOUND,
 						"Graph node not found: " + node_id);
 			return node;
-		} catch (IOException e) {
+		} catch (IOException | URISyntaxException e) {
 			throw new JsonApplicationException(e);
 		}
 	}
@@ -105,29 +118,29 @@ public class GraphServiceImpl implements GraphServiceInterface {
 			GraphNode node = getNode(uriInfo, db_name, node_id);
 			GraphProcess.deleteNode(getBase(uriInfo, db_name), node_id);
 			return node;
-		} catch (IOException e) {
+		} catch (IOException | URISyntaxException e) {
 			throw new JsonApplicationException(e);
 		}
 	}
 
 	@Override
 	public GraphNode createEdge(UriInfo uriInfo, String db_name,
-			String node_id, String to_node_id) {
+			String node_id, String edge_type, String to_node_id) {
 		try {
 			return GraphProcess.createEdge(getBase(uriInfo, db_name), node_id,
-					to_node_id);
-		} catch (IOException e) {
+					edge_type, to_node_id);
+		} catch (IOException | URISyntaxException e) {
 			throw new JsonApplicationException(e);
 		}
 	}
 
 	@Override
 	public GraphNode deleteEdge(UriInfo uriInfo, String db_name,
-			String node_id, String to_node_id) {
+			String node_id, String edge_type, String to_node_id) {
 		try {
 			return GraphProcess.deleteEdge(getBase(uriInfo, db_name), node_id,
-					to_node_id);
-		} catch (IOException e) {
+					edge_type, to_node_id);
+		} catch (IOException | URISyntaxException e) {
 			throw new JsonApplicationException(e);
 		}
 	}

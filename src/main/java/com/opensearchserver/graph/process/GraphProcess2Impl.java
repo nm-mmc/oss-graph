@@ -15,13 +15,25 @@
  **/
 package com.opensearchserver.graph.process;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
+
 import javax.ws.rs.core.Response.Status;
 
+import com.opensearchserver.client.JsonClient2;
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphNode;
 import com.opensearchserver.utils.json.JsonApplicationException;
+import com.opensearchserver.utils.json.ServerResource;
 
 public class GraphProcess2Impl implements GraphProcessInterface {
+
+	private final JsonClient2 client;
+
+	GraphProcess2Impl(ServerResource server) throws URISyntaxException {
+		client = new JsonClient2(server);
+	}
 
 	@Override
 	public void createDataIndex(GraphBase base) {
@@ -42,41 +54,20 @@ public class GraphProcess2Impl implements GraphProcessInterface {
 	}
 
 	@Override
+	public void createUpdateNodes(GraphBase base,
+			LinkedHashMap<String, GraphNode> node) throws IOException,
+			URISyntaxException {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
 	public GraphNode getNode(GraphBase base, String node_id) {
 		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
 				"Not yet implemented");
 	}
 
 	@Override
-	public void loadNodes(GraphBase base, String node_id1, GraphNode node1,
-			String node_id2n, GraphNode node2) {
-		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
-				"Not yet implemented");
-	}
-
-	@Override
-	public void setNodes(GraphBase base, String node_id1, GraphNode node1,
-			String node_id2, GraphNode node2) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public GraphNode deleteNode(GraphBase base, String node_id) {
-		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
-				"Not yet implemented");
-	}
-
-	@Override
-	public GraphNode createEdge(GraphBase base, String from_id,
-			GraphNode from_node, String to_id, GraphNode to_node) {
-		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
-				"Not yet implemented");
-	}
-
-	@Override
-	public GraphNode deleteEdge(GraphBase base, String from_id,
-			GraphNode from_node, String to_id, GraphNode to_node) {
+	public void deleteNode(GraphBase base, String node_id) {
 		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
 				"Not yet implemented");
 	}

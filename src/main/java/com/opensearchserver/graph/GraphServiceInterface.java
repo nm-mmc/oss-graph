@@ -15,6 +15,7 @@
  */
 package com.opensearchserver.graph;
 
+import java.util.LinkedHashMap;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -59,7 +60,16 @@ public interface GraphServiceInterface {
 	@Path("/{db_name}")
 	@Produces(APPLICATION_JSON_UTF8)
 	public GraphBase deleteBase(@Context UriInfo uriInfo,
-			@PathParam("name") String db_name);
+			@PathParam("db_name") String db_name);
+
+	@PUT
+	@POST
+	@Path("/{db_name}/node")
+	@Consumes(APPLICATION_JSON_UTF8)
+	@Produces(APPLICATION_JSON_UTF8)
+	public Set<String> createUpdateNodes(@Context UriInfo uriInfo,
+			@PathParam("db_name") String db_name,
+			LinkedHashMap<String, GraphNode> nodes);
 
 	@PUT
 	@POST
@@ -86,19 +96,21 @@ public interface GraphServiceInterface {
 
 	@PUT
 	@POST
-	@Path("/{db_name}/node/{node_id}/egde/{to_node_id}")
+	@Path("/{db_name}/node/{node_id}/egde/{edge_type}/{to_node_id}")
 	@Produces(APPLICATION_JSON_UTF8)
 	public GraphNode createEdge(@Context UriInfo uriInfo,
 			@PathParam("db_name") String db_name,
 			@PathParam("node_id") String node_id,
+			@PathParam("edge_type") String edge_type,
 			@PathParam("to_node_id") String to_node_id);
 
 	@DELETE
-	@Path("/{db_name}/node/{node_id}/egde/{to_node_id}")
+	@Path("/{db_name}/node/{node_id}/egde/{edge_type}/{to_node_id}")
 	@Produces(APPLICATION_JSON_UTF8)
 	public GraphNode deleteEdge(@Context UriInfo uriInfo,
 			@PathParam("db_name") String db_name,
 			@PathParam("node_id") String node_id,
+			@PathParam("edge_type") String edge_type,
 			@PathParam("to_node_id") String to_node_id);
 
 }

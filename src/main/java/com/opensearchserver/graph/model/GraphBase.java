@@ -15,6 +15,9 @@
  */
 package com.opensearchserver.graph.model;
 
+import java.util.Map;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.opensearchserver.utils.json.ServerResource;
@@ -24,7 +27,18 @@ public class GraphBase {
 
 	public ServerResource data;
 
+	public Map<String, PropertyTypeEnum> node_properties;
+
+	public Set<String> edge_types;
+
 	public GraphBase() {
 		data = null;
+		node_properties = null;
+		edge_types = null;
 	}
+
+	public static enum PropertyTypeEnum {
+		indexed, stored;
+	}
+
 }

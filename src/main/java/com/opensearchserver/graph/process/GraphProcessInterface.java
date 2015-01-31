@@ -15,30 +15,30 @@
  */
 package com.opensearchserver.graph.process;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
+
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphNode;
 
 public interface GraphProcessInterface {
 
-	void createDataIndex(GraphBase base);
+	void createDataIndex(GraphBase base) throws URISyntaxException, IOException;
 
-	void deleteDataIndex(GraphBase base);
+	void deleteDataIndex(GraphBase base) throws URISyntaxException, IOException;
 
-	void createUpdateNode(GraphBase base, String node_id, GraphNode node);
+	void createUpdateNode(GraphBase base, String node_id, GraphNode node)
+			throws IOException, URISyntaxException;
 
-	GraphNode getNode(GraphBase base, String node_id);
+	void createUpdateNodes(GraphBase base,
+			LinkedHashMap<String, GraphNode> nodes) throws IOException,
+			URISyntaxException;
 
-	void loadNodes(GraphBase base, String node_id1, GraphNode node1,
-			String node_id2, GraphNode node2);
+	GraphNode getNode(GraphBase base, String node_id) throws IOException,
+			URISyntaxException;
 
-	void setNodes(GraphBase base, String node_id1, GraphNode node1,
-			String node_id2, GraphNode node2);
+	void deleteNode(GraphBase base, String node_id) throws IOException,
+			URISyntaxException;
 
-	GraphNode deleteNode(GraphBase base, String node_id);
-
-	GraphNode createEdge(GraphBase base, String from_id, GraphNode from_node,
-			String to_id, GraphNode to_node);
-
-	GraphNode deleteEdge(GraphBase base, String from_id, GraphNode from_node,
-			String to_id, GraphNode to_node);
 }

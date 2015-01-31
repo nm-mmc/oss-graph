@@ -15,19 +15,54 @@
  */
 package com.opensearchserver.graph.model;
 
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @JsonInclude(Include.NON_EMPTY)
 public class GraphNode {
-	public Map<String, Object> properties;
-	public Map<String, List<String>> edges;
+
+	public Map<String, String> properties;
+	public Map<String, Set<String>> edges;
 
 	public GraphNode() {
 		properties = null;
 		edges = null;
+	}
+
+	@JsonIgnore
+	@XmlTransient
+	public boolean addProperty(String name, String value) {
+		if (name == null || name.isEmpty() || value == null || value.isEmpty())
+			return false;
+		name = name.intern();
+		if (properties == null)
+			properties = new LinkedHashMap<String, String>();
+		properties.put(name, value);
+		return true;
+	}
+
+	@JsonIgnore
+	@XmlTransient
+	public boolean addEdge(String type, String value) {
+		if (type == null || type.isEmpty() || value == null || value.isEmpty())
+			return false;
+		type = type.intern();
+		if (edges == null)
+			edges = new LinkedHashMap<String, Set<String>>();
+		Set<String> nodeIdSet = edges.get(type);
+		if (nodeIdSet != null)
+			return nodeIdSet.add(value);
+		nodeIdSet = new TreeSet<String>();
+		nodeIdSet.add(value);
+		edges.put(type, nodeIdSet);
+		return true;
 	}
 }
