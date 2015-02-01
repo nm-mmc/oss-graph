@@ -17,8 +17,12 @@ package com.opensearchserver.graph.process;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.ws.rs.core.Response.Status;
@@ -27,6 +31,8 @@ import org.apache.http.client.ClientProtocolException;
 
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphNode;
+import com.opensearchserver.graph.model.GraphNodeResult;
+import com.opensearchserver.graph.model.GraphRequest;
 import com.opensearchserver.utils.StringUtils;
 import com.opensearchserver.utils.json.JsonApplicationException;
 import com.opensearchserver.utils.json.ServerResource;
@@ -102,9 +108,15 @@ public class GraphProcess {
 	public static GraphNode createEdge(GraphBase base, String node_id,
 			String type, String to_node_id) throws IOException,
 			URISyntaxException {
+
+		// Check if the type exists
 		if (base.edge_types == null || base.edge_types.isEmpty())
 			throw new JsonApplicationException(Status.BAD_REQUEST,
-					"This graph base does not accept edges");
+					"This base did not define any edge type");
+		if (!base.isEdgeType(type))
+			throw new JsonApplicationException(Status.BAD_REQUEST,
+					"Unknown edge type: " + type);
+
 		GraphProcessInterface graphProcess = getImplementation(base.data);
 
 		// Retrieve the node from the index
@@ -150,6 +162,39 @@ public class GraphProcess {
 		// We do the update
 		graphProcess.createUpdateNode(base, node_id, node);
 		return node;
+	}
+
+	public static List<GraphNodeResult> request(GraphBase base,
+			GraphRequest request) throws IOException, URISyntaxException {
+		GraphProcessInterface graphProcess = getImplementation(base.data);
+		List<GraphNodeResult> resultList = new ArrayList<GraphNodeResult>(
+				request.getRowsOrDefault());
+		graphProcess.request(base, request, resultList);
+		Map<String, GraphNodeResult> nodeResultMap = new TreeMap<String, GraphNodeResult>();
+		for (GraphNodeResult nodeResult : resultList)
+			nodeResultMap.put(nodeResult.node_id, nodeResult);
+		graphProcess.getNodes(base, nodeResultMap);
+		return resultList;
+	}
+
+	public static class NodeScore implements Comparable<NodeScore> {
+
+		final public String node_id;
+		public double score;
+
+		NodeScore(String node_id) {
+			this.node_id = node_id;
+			this.score = 0;
+		}
+
+		@Override
+		/**
+		 * Descending order by default
+		 */
+		public int compareTo(final NodeScore o) {
+			return Double.compare(o.score, score);
+		}
+
 	}
 
 }

@@ -20,44 +20,47 @@ import java.util.Set;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.opensearchserver.utils.json.ServerResource;
 
 @JsonInclude(Include.NON_EMPTY)
-public class GraphBase {
+public class GraphRequest {
 
-	public ServerResource data;
+	public Integer start;
+	public Integer rows;
 
-	public Map<String, PropertyTypeEnum> node_properties;
+	public Set<String> exclude_nodes;
 
-	public Set<String> edge_types;
+	public Map<String, Double> edge_type_weight;
+	public Map<String, Set<String>> edges;
 
-	public GraphBase() {
-		data = null;
-		node_properties = null;
-		edge_types = null;
+	public GraphRequest() {
+		start = null;
+		rows = null;
+		exclude_nodes = null;
+		edge_type_weight = null;
+		edges = null;
 	}
 
-	public static enum PropertyTypeEnum {
-		indexed, stored;
-	}
-
+	@JsonInclude
 	@XmlTransient
-	@JsonIgnore
-	public boolean isEdgeType(String edge_type) {
-		return edge_types == null ? false : edge_types.contains(edge_type);
+	public int getStartOrDefault() {
+		return start == null ? 0 : start;
 	}
 
+	@JsonInclude
 	@XmlTransient
-	@JsonIgnore
-	public boolean isIndexedProperty(String property) {
-		if (node_properties == null)
-			return false;
-		PropertyTypeEnum type = node_properties.get(property);
-		if (type == null)
-			return false;
-		return type == PropertyTypeEnum.indexed;
+	public int getRowsOrDefault() {
+		return rows == null ? 10 : rows;
 	}
+
+	@JsonInclude
+	@XmlTransient
+	public Double getEdgeWeight(String edge_type) {
+		if (edge_type_weight == null)
+			return 1.0;
+		Double weight = edge_type_weight.get(edge_type);
+		return weight == null ? 1.0 : weight;
+	}
+
 }
