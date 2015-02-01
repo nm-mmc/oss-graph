@@ -25,7 +25,6 @@ To create an item, just POST a JSON structure describing the database.
 
 Replace {db_name} by the name of your database.
 
-
 Here is the structure of a database:
 
 ```json
@@ -45,9 +44,9 @@ Here is the structure of a database:
 }
 ```
 
-- "data": specifies the OpenSearchServer backend instance and the index which contains the data.
-- "node_properties": the possible properties for a node. A property can be indexed or stored.
-- "edge_types" : The possible type of edges. 
+- **data**: specifies the OpenSearchServer backend instance and the index which contains the data.
+- **node_properties**: the possible properties for a node. A property can be indexed or stored.
+- **edge_types** : The possible type of edges. 
 
 
 Get a database item
@@ -67,8 +66,8 @@ Insert or update a node
 	
 The structure of a node:
 
-- "properties": Set the properties attached to this node.
-- "edges": Set the connections with the other nodes.
+- **properties**: the properties attached to this node.
+- **edges**: the connections with the other nodes.
 
 An example:
 
@@ -77,7 +76,7 @@ An example:
     "properties": {
         "type": "visit",
         "user": "john",
-         "date": "20150115"
+        "date": "20150115"
     },
     "edges": {
        "see": ["p1", "p2"],
@@ -107,3 +106,77 @@ Delete a node
 -------------
 
 	curl -XDELETE http://localhost:9093/{db_name}/node/{node_id}
+	
+Create / update an edge
+-----------------------
+
+	curl -XPOST http://localhost:9093/{db_name}/node/{node_id}/edge/{edge_type}/{to_node_id}
+	
+- **db_name**: the name of the graph database.
+- **node_id**: the ID of the node.
+- **edge_type**: the type of the edge.
+- **to_node_id**: the ID of the related node.
+	
+Delete an edge
+--------------
+
+	curl -XDELETE http://localhost:9093/{db_name}/node/{from_node_id}/edge/edge_type/{to_node_id}
+
+Make a graph request
+--------------------
+
+	curl -XPOST -H "Content-Type:application/json" --data-binary @file.json http://localhost:9093/{db_name}/request
+
+To create an item, just POST a JSON structure describing the database.
+
+Replace {db_name} by the name of your database.
+
+Here is the structure of a request:
+
+```json
+{
+    "start": 0,
+    "rows": 3,
+    "edge_type_weight": {
+        "see": 0.1,
+        "buy": 2
+    },
+    "exclude_nodes": [ "p133", "p73", "p77", "p44", "p155", "p135"],
+    "edges": {
+        "see": ["p133", "p73", "p77", "p44", "p155", "p135"]
+    }
+}
+```
+
+- **start**: Manage the pagination.
+- **rows**: The number of nodes returned.
+- **edge_type_weight**: An optional weight for each type of edge.
+- **exclude_nodes**: An array of nodes ID. This nodes will be excluded from the result.
+- **edges**: The edges of the node to compare
+
+The result is an array of nodes.
+
+```json
+[ {
+  "properties" : {
+    "name" : "product10",
+    "type" : "product"
+  },
+  "score" : 14.3,
+  "node_id" : "p10"
+}, {
+  "properties" : {
+    "name" : "product153",
+    "type" : "product"
+  },
+  "score" : 13.700000000000001,
+  "node_id" : "p153"
+}, {
+  "properties" : {
+    "name" : "product327",
+    "type" : "product"
+  },
+  "score" : 13.700000000000001,
+  "node_id" : "p327"
+} ]
+```
