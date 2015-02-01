@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphNode;
@@ -41,14 +42,14 @@ public interface GraphProcessInterface {
 	GraphNode getNode(GraphBase base, String node_id) throws IOException,
 			URISyntaxException;
 
+	void getNodes(GraphBase base, Map<String, ? extends GraphNode> nodeMap)
+			throws IOException, URISyntaxException;
+
 	void deleteNode(GraphBase base, String node_id) throws IOException,
 			URISyntaxException;
 
 	void request(GraphBase base, GraphRequest request,
 			List<GraphNodeResult> results) throws IOException,
-			URISyntaxException;
-
-	void loadNodes(List<GraphNodeResult> results) throws IOException,
 			URISyntaxException;
 
 }

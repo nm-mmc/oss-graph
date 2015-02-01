@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -70,6 +71,14 @@ public class GraphProcess2Impl implements GraphProcessInterface {
 	}
 
 	@Override
+	public void getNodes(GraphBase base,
+			Map<String, ? extends GraphNode> nodeMap) throws IOException,
+			URISyntaxException {
+		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
+				"Not yet implemented");
+	}
+
+	@Override
 	public void deleteNode(GraphBase base, String node_id) {
 		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
 				"Not yet implemented");
@@ -81,14 +90,6 @@ public class GraphProcess2Impl implements GraphProcessInterface {
 			URISyntaxException {
 		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
 				"Not yet implemented");
-	}
-
-	@Override
-	public void loadNodes(List<GraphNodeResult> results) throws IOException,
-			URISyntaxException {
-		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
-				"Not yet implemented");
-
 	}
 
 }

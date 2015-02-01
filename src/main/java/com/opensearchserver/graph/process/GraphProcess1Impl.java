@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,14 +31,15 @@ import javax.ws.rs.core.Response.Status;
 
 import com.opensearchserver.client.JsonClient1;
 import com.opensearchserver.client.common.index.TemplateEnum;
+import com.opensearchserver.client.common.search.query.DocumentsQuery;
 import com.opensearchserver.client.common.search.query.FacetField;
 import com.opensearchserver.client.common.search.query.SearchField;
 import com.opensearchserver.client.common.search.query.SearchField.SearchFieldMode;
 import com.opensearchserver.client.common.search.query.SearchFieldQuery;
-import com.opensearchserver.client.common.search.query.SearchQueryAbstract;
 import com.opensearchserver.client.common.search.query.SearchQueryAbstract.OperatorEnum;
 import com.opensearchserver.client.common.search.query.filter.TermFilter;
 import com.opensearchserver.client.common.update.DocumentUpdate;
+import com.opensearchserver.client.v1.DocumentApi1;
 import com.opensearchserver.client.v1.FieldApi1;
 import com.opensearchserver.client.v1.IndexApi1;
 import com.opensearchserver.client.v1.SearchApi1;
@@ -49,6 +51,7 @@ import com.opensearchserver.client.v1.field.SchemaField.Indexed;
 import com.opensearchserver.client.v1.field.SchemaField.Stored;
 import com.opensearchserver.client.v1.field.SchemaField.TermVector;
 import com.opensearchserver.client.v1.search.DocumentResult1;
+import com.opensearchserver.client.v1.search.DocumentsResult1;
 import com.opensearchserver.client.v1.search.FacetFieldItem;
 import com.opensearchserver.client.v1.search.FacetResult1;
 import com.opensearchserver.client.v1.search.FieldValueList1;
@@ -209,25 +212,28 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 		updateApi.updateDocuments(base.data.name, documents);
 	}
 
-	private void populateReturnedFields(GraphBase base,
-			SearchQueryAbstract searchQuery) {
-		searchQuery.addReturnedField(GraphProcess.FIELD_NODE_ID);
+	private Collection<String> populateReturnedFields(GraphBase base,
+			Collection<String> returnedFields) {
+		returnedFields.add(GraphProcess.FIELD_NODE_ID);
 		if (base.node_properties != null)
 			for (String name : base.node_properties.keySet())
-				searchQuery.addReturnedField(GraphProcess
-						.getPropertyField(name));
+				returnedFields.add(GraphProcess.getPropertyField(name));
 		if (base.edge_types != null)
 			for (String type : base.edge_types)
-				searchQuery.addReturnedField(GraphProcess.getEdgeField(type));
+				returnedFields.add(GraphProcess.getEdgeField(type));
+		return returnedFields;
 	}
 
-	public void populateGraphNode(DocumentResult1 document, GraphNode node) {
+	public String populateGraphNode(DocumentResult1 document, GraphNode node) {
 		if (document.fields == null)
-			return;
+			return null;
+		String node_id = null;
 		for (FieldValueList1 fieldValue : document.fields) {
-			if (fieldValue.values == null)
+			if (fieldValue.values == null || fieldValue.values.isEmpty())
 				continue;
-			if (fieldValue.fieldName
+			if (fieldValue.fieldName.equals(GraphProcess.FIELD_NODE_ID))
+				node_id = fieldValue.values.get(0);
+			else if (fieldValue.fieldName
 					.startsWith(GraphProcess.FIELD_PREFIX_PROPERTY)) {
 				node.addProperty(
 						fieldValue.fieldName
@@ -242,6 +248,7 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 											.length()), value);
 			}
 		}
+		return node_id;
 	}
 
 	@Override
@@ -253,7 +260,8 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 		SearchFieldQuery searchFieldQuery = (SearchFieldQuery) new SearchFieldQuery()
 				.addSearchField(searchField).setQuery(node_id);
 
-		populateReturnedFields(base, searchFieldQuery);
+		searchFieldQuery.returnedFields = (List<String>) populateReturnedFields(
+				base, new ArrayList<String>());
 
 		SearchResult1 searchResult = searchApi.executeSearchField(
 				base.data.name, searchFieldQuery);
@@ -276,10 +284,31 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 	}
 
 	@Override
-	public void loadNodes(List<GraphNodeResult> results) throws IOException,
+	public void getNodes(GraphBase base,
+			Map<String, ? extends GraphNode> nodeMap) throws IOException,
 			URISyntaxException {
-		// TODO Auto-generated method stub
-
+		DocumentApi1 documentApi = new DocumentApi1(client);
+		DocumentsQuery documentsQuery = new DocumentsQuery();
+		documentsQuery.setField(GraphProcess.FIELD_NODE_ID);
+		documentsQuery.returnedFields = (List<String>) populateReturnedFields(
+				base, new ArrayList<String>());
+		for (String node_id : nodeMap.keySet())
+			documentsQuery.addValue(node_id);
+		DocumentsResult1 documentsResult = documentApi.documentsSearch(
+				base.data.name, documentsQuery);
+		if (documentsResult == null || documentsResult.documents == null)
+			return;
+		for (DocumentResult1 document : documentsResult.documents) {
+			GraphNode node1 = new GraphNode();
+			String node_id = populateGraphNode(document, node1);
+			if (node_id == null)
+				continue;
+			GraphNode node2 = nodeMap.get(node_id);
+			if (node2 == null)
+				continue;
+			node2.edges = node1.edges;
+			node2.properties = node1.properties;
+		}
 	}
 
 	@Override
@@ -311,7 +340,8 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 			}
 		}
 
-		populateReturnedFields(base, searchFieldQuery);
+		searchFieldQuery.returnedFields = (List<String>) populateReturnedFields(
+				base, new ArrayList<String>());
 		searchFieldQuery.setStart(0);
 		searchFieldQuery.setRows(0);
 

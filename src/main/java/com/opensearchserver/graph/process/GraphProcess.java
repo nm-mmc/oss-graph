@@ -20,7 +20,9 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.ws.rs.core.Response.Status;
@@ -168,7 +170,10 @@ public class GraphProcess {
 		List<GraphNodeResult> resultList = new ArrayList<GraphNodeResult>(
 				request.getRowsOrDefault());
 		graphProcess.request(base, request, resultList);
-		graphProcess.loadNodes(resultList);
+		Map<String, GraphNodeResult> nodeResultMap = new TreeMap<String, GraphNodeResult>();
+		for (GraphNodeResult nodeResult : resultList)
+			nodeResultMap.put(nodeResult.node_id, nodeResult);
+		graphProcess.getNodes(base, nodeResultMap);
 		return resultList;
 	}
 
