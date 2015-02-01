@@ -16,6 +16,7 @@
 package com.opensearchserver.graph;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -31,6 +32,8 @@ import javax.ws.rs.core.UriInfo;
 
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphNode;
+import com.opensearchserver.graph.model.GraphNodeResult;
+import com.opensearchserver.graph.model.GraphRequest;
 
 @Path("/")
 public interface GraphServiceInterface {
@@ -112,5 +115,12 @@ public interface GraphServiceInterface {
 			@PathParam("node_id") String node_id,
 			@PathParam("edge_type") String edge_type,
 			@PathParam("to_node_id") String to_node_id);
+
+	@POST
+	@Path("/{db_name}/request")
+	@Consumes(APPLICATION_JSON_UTF8)
+	@Produces(APPLICATION_JSON_UTF8)
+	public List<GraphNodeResult> requestNodes(@Context UriInfo uriInfo,
+			@PathParam("db_name") String db_name, GraphRequest request);
 
 }

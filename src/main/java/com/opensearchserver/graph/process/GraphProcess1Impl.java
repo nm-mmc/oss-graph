@@ -23,15 +23,20 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 import javax.ws.rs.core.Response.Status;
 
 import com.opensearchserver.client.JsonClient1;
 import com.opensearchserver.client.common.index.TemplateEnum;
+import com.opensearchserver.client.common.search.query.FacetField;
 import com.opensearchserver.client.common.search.query.SearchField;
 import com.opensearchserver.client.common.search.query.SearchField.SearchFieldMode;
 import com.opensearchserver.client.common.search.query.SearchFieldQuery;
+import com.opensearchserver.client.common.search.query.SearchQueryAbstract;
+import com.opensearchserver.client.common.search.query.SearchQueryAbstract.OperatorEnum;
+import com.opensearchserver.client.common.search.query.filter.TermFilter;
 import com.opensearchserver.client.common.update.DocumentUpdate;
 import com.opensearchserver.client.v1.FieldApi1;
 import com.opensearchserver.client.v1.IndexApi1;
@@ -44,11 +49,16 @@ import com.opensearchserver.client.v1.field.SchemaField.Indexed;
 import com.opensearchserver.client.v1.field.SchemaField.Stored;
 import com.opensearchserver.client.v1.field.SchemaField.TermVector;
 import com.opensearchserver.client.v1.search.DocumentResult1;
+import com.opensearchserver.client.v1.search.FacetFieldItem;
+import com.opensearchserver.client.v1.search.FacetResult1;
 import com.opensearchserver.client.v1.search.FieldValueList1;
 import com.opensearchserver.client.v1.search.SearchResult1;
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphBase.PropertyTypeEnum;
 import com.opensearchserver.graph.model.GraphNode;
+import com.opensearchserver.graph.model.GraphNodeResult;
+import com.opensearchserver.graph.model.GraphRequest;
+import com.opensearchserver.graph.process.GraphProcess.NodeScore;
 import com.opensearchserver.utils.json.JsonApplicationException;
 import com.opensearchserver.utils.json.ServerResource;
 
@@ -144,7 +154,7 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 		if (node.properties != null && !node.properties.isEmpty()) {
 			if (base.node_properties == null)
 				throw new JsonApplicationException(Status.BAD_REQUEST,
-						"This graph base does not accept properties.");
+						"This graph database does not define any property.");
 			for (Map.Entry<String, String> entry : node.properties.entrySet()) {
 				String field = entry.getKey().intern();
 				if (!base.node_properties.containsKey(field))
@@ -161,7 +171,7 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 		if (node.edges != null && !node.edges.isEmpty()) {
 			if (base.edge_types == null)
 				throw new JsonApplicationException(Status.BAD_REQUEST,
-						"This graph base does not accept edges.");
+						"This graph database does not define any edge.");
 			for (Map.Entry<String, Set<String>> entry : node.edges.entrySet()) {
 				String type = entry.getKey().intern();
 				if (!base.edge_types.contains(type))
@@ -199,6 +209,41 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 		updateApi.updateDocuments(base.data.name, documents);
 	}
 
+	private void populateReturnedFields(GraphBase base,
+			SearchQueryAbstract searchQuery) {
+		searchQuery.addReturnedField(GraphProcess.FIELD_NODE_ID);
+		if (base.node_properties != null)
+			for (String name : base.node_properties.keySet())
+				searchQuery.addReturnedField(GraphProcess
+						.getPropertyField(name));
+		if (base.edge_types != null)
+			for (String type : base.edge_types)
+				searchQuery.addReturnedField(GraphProcess.getEdgeField(type));
+	}
+
+	public void populateGraphNode(DocumentResult1 document, GraphNode node) {
+		if (document.fields == null)
+			return;
+		for (FieldValueList1 fieldValue : document.fields) {
+			if (fieldValue.values == null)
+				continue;
+			if (fieldValue.fieldName
+					.startsWith(GraphProcess.FIELD_PREFIX_PROPERTY)) {
+				node.addProperty(
+						fieldValue.fieldName
+								.substring(GraphProcess.FIELD_PREFIX_PROPERTY
+										.length()), fieldValue.values.get(0));
+			} else if (fieldValue.fieldName
+					.startsWith(GraphProcess.FIELD_PREFIX_EDGE)) {
+				for (String value : fieldValue.values)
+					node.addEdge(
+							fieldValue.fieldName
+									.substring(GraphProcess.FIELD_PREFIX_EDGE
+											.length()), value);
+			}
+		}
+	}
+
 	@Override
 	public GraphNode getNode(GraphBase base, String node_id)
 			throws IOException, URISyntaxException {
@@ -207,15 +252,9 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 				GraphProcess.FIELD_NODE_ID).setMode(SearchFieldMode.TERM);
 		SearchFieldQuery searchFieldQuery = (SearchFieldQuery) new SearchFieldQuery()
 				.addSearchField(searchField).setQuery(node_id);
-		searchFieldQuery.addReturnedField(GraphProcess.FIELD_NODE_ID);
-		if (base.node_properties != null)
-			for (String name : base.node_properties.keySet())
-				searchFieldQuery.addReturnedField(GraphProcess
-						.getPropertyField(name));
-		if (base.edge_types != null)
-			for (String type : base.edge_types)
-				searchFieldQuery.addReturnedField(GraphProcess
-						.getEdgeField(type));
+
+		populateReturnedFields(base, searchFieldQuery);
+
 		SearchResult1 searchResult = searchApi.executeSearchField(
 				base.data.name, searchFieldQuery);
 		if (searchResult == null || searchResult.numFound == null
@@ -224,24 +263,7 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 					"Node not found: " + node_id);
 		DocumentResult1 document = searchResult.documents.get(0);
 		GraphNode node = new GraphNode();
-		if (document.fields != null) {
-			for (FieldValueList1 fieldValue : document.fields) {
-				if (fieldValue.values == null)
-					continue;
-				if (fieldValue.fieldName
-						.startsWith(GraphProcess.FIELD_PREFIX_PROPERTY)) {
-					node.addProperty(fieldValue.fieldName
-							.substring(GraphProcess.FIELD_PREFIX_PROPERTY
-									.length()), fieldValue.values.get(0));
-				} else if (fieldValue.fieldName
-						.startsWith(GraphProcess.FIELD_PREFIX_EDGE)) {
-					for (String value : fieldValue.values)
-						node.addEdge(fieldValue.fieldName
-								.substring(GraphProcess.FIELD_PREFIX_EDGE
-										.length()), value);
-				}
-			}
-		}
+		populateGraphNode(document, node);
 		return node;
 	}
 
@@ -251,6 +273,84 @@ public class GraphProcess1Impl implements GraphProcessInterface {
 		UpdateApi1 updateApi = new UpdateApi1(client);
 		updateApi.deleteDocumentsByFieldValue(base.data.name,
 				GraphProcess.FIELD_NODE_ID, Arrays.asList(node_id));
+	}
+
+	@Override
+	public void loadNodes(List<GraphNodeResult> results) throws IOException,
+			URISyntaxException {
+		// TODO Auto-generated method stub
+
+	}
+
+	@Override
+	public void request(GraphBase base, GraphRequest request,
+			List<GraphNodeResult> results) throws IOException,
+			URISyntaxException {
+
+		// Prepare the query
+		SearchApi1 searchApi = new SearchApi1(client);
+		SearchFieldQuery searchFieldQuery = (SearchFieldQuery) new SearchFieldQuery()
+				.setEmptyReturnsAll(true).setFilterOperator(OperatorEnum.OR);
+
+		// Build the edge filter
+		if (request.edges != null && !request.edges.isEmpty()) {
+			for (Map.Entry<String, Set<String>> entry : request.edges
+					.entrySet()) {
+				String edge_type = entry.getKey();
+				String field = GraphProcess.getEdgeField(edge_type);
+				searchFieldQuery.addFacet(new FacetField().setField(field)
+						.setMinCount(1).setMultivalued(true));
+				Set<String> edge_set = entry.getValue();
+				if (edge_set == null || edge_set.isEmpty())
+					continue;
+				if (!base.isEdgeType(edge_type))
+					throw new JsonApplicationException(Status.BAD_REQUEST,
+							"Unknown edge type: " + edge_type);
+				for (String value : edge_set)
+					searchFieldQuery.addFilter(new TermFilter(field, value));
+			}
+		}
+
+		populateReturnedFields(base, searchFieldQuery);
+		searchFieldQuery.setStart(0);
+		searchFieldQuery.setRows(0);
+
+		// Execute the search request
+		SearchResult1 searchResult = searchApi.executeSearchField(
+				base.data.name, searchFieldQuery);
+		if (searchResult == null)
+			return;
+		if (searchResult.numFound == null || searchResult.numFound == 0
+				|| searchResult.facets == null)
+			return;
+
+		// Compute the score using facets
+		Map<String, NodeScore> nodeScoreMap = new TreeMap<String, NodeScore>();
+		for (FacetResult1 facetResult : searchResult.facets) {
+			Double weight = request.getEdgeWeight(facetResult.fieldName
+					.substring(GraphProcess.FIELD_PREFIX_EDGE.length()));
+			for (FacetFieldItem facetItem : facetResult.terms) {
+				NodeScore nodeScore = nodeScoreMap.get(facetItem.term);
+				if (nodeScore == null) {
+					nodeScore = new NodeScore(facetItem.term);
+					nodeScoreMap.put(facetItem.term, nodeScore);
+				}
+				nodeScore.score += facetItem.count * weight;
+			}
+		}
+
+		// Exclude the unwanted nodes
+		if (request.exclude_nodes != null)
+			for (String id : request.exclude_nodes)
+				nodeScoreMap.remove(id);
+
+		// Sort the result in descending order
+		NodeScore[] nodeScoreArray = (NodeScore[]) nodeScoreMap.values()
+				.toArray(new NodeScore[nodeScoreMap.size()]);
+		Arrays.sort(nodeScoreArray);
+		for (int i = request.getStartOrDefault(); i < request
+				.getRowsOrDefault() && i < nodeScoreArray.length; i++)
+			results.add(new GraphNodeResult().set(nodeScoreArray[i]));
 	}
 
 }

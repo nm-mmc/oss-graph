@@ -18,9 +18,12 @@ package com.opensearchserver.graph.process;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphNode;
+import com.opensearchserver.graph.model.GraphNodeResult;
+import com.opensearchserver.graph.model.GraphRequest;
 
 public interface GraphProcessInterface {
 
@@ -39,6 +42,13 @@ public interface GraphProcessInterface {
 			URISyntaxException;
 
 	void deleteNode(GraphBase base, String node_id) throws IOException,
+			URISyntaxException;
+
+	void request(GraphBase base, GraphRequest request,
+			List<GraphNodeResult> results) throws IOException,
+			URISyntaxException;
+
+	void loadNodes(List<GraphNodeResult> results) throws IOException,
 			URISyntaxException;
 
 }

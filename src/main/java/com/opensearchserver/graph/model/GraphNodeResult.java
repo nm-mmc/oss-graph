@@ -15,49 +15,30 @@
  */
 package com.opensearchserver.graph.model;
 
-import java.util.Map;
-import java.util.Set;
-
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.opensearchserver.utils.json.ServerResource;
+import com.opensearchserver.graph.process.GraphProcess.NodeScore;
 
 @JsonInclude(Include.NON_EMPTY)
-public class GraphBase {
+public class GraphNodeResult extends GraphNode {
 
-	public ServerResource data;
+	public double score;
+	public String node_id;
 
-	public Map<String, PropertyTypeEnum> node_properties;
-
-	public Set<String> edge_types;
-
-	public GraphBase() {
-		data = null;
-		node_properties = null;
-		edge_types = null;
-	}
-
-	public static enum PropertyTypeEnum {
-		indexed, stored;
+	public GraphNodeResult() {
+		score = 0;
+		node_id = null;
 	}
 
 	@XmlTransient
 	@JsonIgnore
-	public boolean isEdgeType(String edge_type) {
-		return edge_types == null ? false : edge_types.contains(edge_type);
+	public GraphNodeResult set(NodeScore nodeScore) {
+		score = nodeScore.score;
+		node_id = nodeScore.node_id;
+		return this;
 	}
 
-	@XmlTransient
-	@JsonIgnore
-	public boolean isIndexedProperty(String property) {
-		if (node_properties == null)
-			return false;
-		PropertyTypeEnum type = node_properties.get(property);
-		if (type == null)
-			return false;
-		return type == PropertyTypeEnum.indexed;
-	}
 }

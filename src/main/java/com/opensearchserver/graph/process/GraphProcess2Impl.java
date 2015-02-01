@@ -18,12 +18,15 @@ package com.opensearchserver.graph.process;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import javax.ws.rs.core.Response.Status;
 
 import com.opensearchserver.client.JsonClient2;
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphNode;
+import com.opensearchserver.graph.model.GraphNodeResult;
+import com.opensearchserver.graph.model.GraphRequest;
 import com.opensearchserver.utils.json.JsonApplicationException;
 import com.opensearchserver.utils.json.ServerResource;
 
@@ -70,6 +73,22 @@ public class GraphProcess2Impl implements GraphProcessInterface {
 	public void deleteNode(GraphBase base, String node_id) {
 		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
 				"Not yet implemented");
+	}
+
+	@Override
+	public void request(GraphBase base, GraphRequest request,
+			List<GraphNodeResult> results) throws IOException,
+			URISyntaxException {
+		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
+				"Not yet implemented");
+	}
+
+	@Override
+	public void loadNodes(List<GraphNodeResult> results) throws IOException,
+			URISyntaxException {
+		throw new JsonApplicationException(Status.NOT_IMPLEMENTED,
+				"Not yet implemented");
+
 	}
 
 }

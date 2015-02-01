@@ -16,6 +16,7 @@
 package com.opensearchserver.graph;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.Path;
@@ -25,6 +26,8 @@ import javax.ws.rs.core.UriInfo;
 
 import com.opensearchserver.graph.model.GraphBase;
 import com.opensearchserver.graph.model.GraphNode;
+import com.opensearchserver.graph.model.GraphNodeResult;
+import com.opensearchserver.graph.model.GraphRequest;
 import com.opensearchserver.graph.process.GraphProcess;
 import com.opensearchserver.utils.json.JsonApplicationException;
 
@@ -138,6 +141,16 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			return GraphProcess.deleteEdge(getBase(uriInfo, db_name), node_id,
 					edge_type, to_node_id);
+		} catch (Exception e) {
+			throw new JsonApplicationException(e);
+		}
+	}
+
+	@Override
+	public List<GraphNodeResult> requestNodes(UriInfo uriInfo, String db_name,
+			GraphRequest request) {
+		try {
+			return GraphProcess.request(getBase(uriInfo, db_name), request);
 		} catch (Exception e) {
 			throw new JsonApplicationException(e);
 		}
