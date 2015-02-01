@@ -15,8 +15,6 @@
  */
 package com.opensearchserver.graph;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.Set;
 
@@ -69,7 +67,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 					"Graph base not found: " + db_name);
 		try {
 			GraphProcess.deleteDataIndex(base);
-		} catch (IOException | URISyntaxException e) {
+		} catch (Exception e) {
 			throw new JsonApplicationException(e);
 		}
 		return base;
@@ -82,7 +80,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 			GraphProcess.createUpdateNode(getBase(uriInfo, db_name), node_id,
 					node);
 			return node;
-		} catch (IOException | URISyntaxException e) {
+		} catch (Exception e) {
 			throw new JsonApplicationException(e);
 		}
 	}
@@ -93,7 +91,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			GraphProcess.createUpdateNodes(getBase(uriInfo, db_name), nodes);
 			return nodes.keySet();
-		} catch (IOException | URISyntaxException e) {
+		} catch (Exception e) {
 			throw new JsonApplicationException(e);
 		}
 	}
@@ -107,7 +105,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 				throw new JsonApplicationException(Status.NOT_FOUND,
 						"Graph node not found: " + node_id);
 			return node;
-		} catch (IOException | URISyntaxException e) {
+		} catch (Exception e) {
 			throw new JsonApplicationException(e);
 		}
 	}
@@ -118,7 +116,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 			GraphNode node = getNode(uriInfo, db_name, node_id);
 			GraphProcess.deleteNode(getBase(uriInfo, db_name), node_id);
 			return node;
-		} catch (IOException | URISyntaxException e) {
+		} catch (Exception e) {
 			throw new JsonApplicationException(e);
 		}
 	}
@@ -129,7 +127,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			return GraphProcess.createEdge(getBase(uriInfo, db_name), node_id,
 					edge_type, to_node_id);
-		} catch (IOException | URISyntaxException e) {
+		} catch (Exception e) {
 			throw new JsonApplicationException(e);
 		}
 	}
@@ -140,7 +138,7 @@ public class GraphServiceImpl implements GraphServiceInterface {
 		try {
 			return GraphProcess.deleteEdge(getBase(uriInfo, db_name), node_id,
 					edge_type, to_node_id);
-		} catch (IOException | URISyntaxException e) {
+		} catch (Exception e) {
 			throw new JsonApplicationException(e);
 		}
 	}

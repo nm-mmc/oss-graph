@@ -96,7 +96,7 @@ public interface GraphServiceInterface {
 
 	@PUT
 	@POST
-	@Path("/{db_name}/node/{node_id}/egde/{edge_type}/{to_node_id}")
+	@Path("/{db_name}/node/{node_id}/edge/{edge_type}/{to_node_id}")
 	@Produces(APPLICATION_JSON_UTF8)
 	public GraphNode createEdge(@Context UriInfo uriInfo,
 			@PathParam("db_name") String db_name,
@@ -105,7 +105,7 @@ public interface GraphServiceInterface {
 			@PathParam("to_node_id") String to_node_id);
 
 	@DELETE
-	@Path("/{db_name}/node/{node_id}/egde/{edge_type}/{to_node_id}")
+	@Path("/{db_name}/node/{node_id}/edge/{edge_type}/{to_node_id}")
 	@Produces(APPLICATION_JSON_UTF8)
 	public GraphNode deleteEdge(@Context UriInfo uriInfo,
 			@PathParam("db_name") String db_name,
