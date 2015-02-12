@@ -32,6 +32,8 @@ Here is the structure of a database:
     "data": {
         "url": "http://localhost:8080",
         "name": "oss_graph",
+        "login": "your_login",
+        "api_key": "your_api_key",
         "time_out": 30000
     }, 
     "node_properties": {
